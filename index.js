@@ -9,6 +9,7 @@ require("./startup/keySetup")();
 require("./startup/db")();
 require("./startup/cors")(app);
 require("./startup/routes")(app);
+require("./startup/validation")();
 require("./events")(io);
 
 const port = process.env.PORT || 3000;
