@@ -32,21 +32,20 @@ module.exports = function (io) {
               return socket.emit("roomFull", "Room is full!");
             }
 
-            const foundPlayer = room.playerData.some(el => el.id === data.playerId);
-            if (!foundPlayer) {
-              room.playerData = [...room.playerData, {
-                id: data.playerId,
-                name: data.playerName,
-                score: 0
-              }];
-            }
-
-            room.markModified('playerData');
-            room.save()
-                .then(updatedRoom => {
-                  return socket.emit("joinedRoom", updatedRoom);
-                })
-                .catch(err => console.error(err));
+            Room.findOneAndUpdate(
+              { gameId: data.gameId }, 
+              { $push: { "playerData": { 
+                "id": data.playerId,
+                "name": data.playerName,
+                "score": 0
+              } } }, 
+              { new: true },
+              (err, result) => {
+                if (err) 
+                  return console.error(err);
+                return socket.emit("joinedRoom", result);
+              }
+            )
           })
           .catch(err => {
             console.error(err);
@@ -55,25 +54,16 @@ module.exports = function (io) {
     })
 
     socket.on("leaveRoom", data => {
-      Room.findOne({ gameId: data.gameId })
-          .then(room => {
-            const playerIndex = room.playerData.findIndex(el => el.id === data.playerId);
-            if (playerIndex === -1) {
-              return socket.emit("playerNotFound", "Can't find player with given index in the room")
-            }
-
-            const player = room.playerData.splice(playerIndex, 1);
-            room.markModified('playerData');
-            room.save()
-                .then(updatedRoom => {
-                  return socket.emit("leftRoom", updatedRoom);
-                })
-                .catch(err => console.error(err));
-          })
-          .catch(err => {
-            console.error(err);
-            return socket.emit("roomNotFound", "Cannot find room with given ID");
-          });
+      Room.findOneAndUpdate(
+        { gameId: data.gameId, "playerData.id": data.playerId }, 
+        { $pull: { "playerData": { "id": data.playerId } } }, 
+        { new: true },
+        (err, result) => {
+          if (err) 
+            return console.error(err);
+          return socket.emit("leftRoom", result);
+        }
+      )
     })
 
     socket.on("startGame", data => {
@@ -93,25 +83,16 @@ module.exports = function (io) {
     })
 
     socket.on("timeUp", data => {
-      Room.findOne({ gameId: data.gameId })
-          .then(room => {
-            const playerIndex = room.playerData.findIndex(el => el.id === data.playerId);
-            if (playerIndex === -1) {
-              return socket.emit("playerNotFound", "Can't find player with given index in the room")
-            }
-
-            room.playerData[playerIndex].score = data.playerScore;
-            room.markModified('playerData');
-            room.save()
-                .then(updatedRoom => {
-                  return socket.emit("updatedPlayerData", updatedRoom);
-                })
-                .catch(err => console.error(err));
-          })
-          .catch(err => {
-            console.error(err);
-            return socket.emit("roomNotFound", "Cannot find room with given ID");
-          });
+      Room.findOneAndUpdate(
+        { gameId: data.gameId, "playerData.id": data.playerId }, 
+        { $set: { "playerData.$.score": data.playerScore } }, 
+        { new: true },
+        (err, result) => {
+          if (err) 
+            return console.error(err);
+          return socket.emit("updatedPlayerData", { gameId: data.gameId });
+        }
+      )
     })
 
     socket.on("top3", data => {
