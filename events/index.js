@@ -28,6 +28,10 @@ module.exports = function (io) {
     socket.on("joinRoom", data => {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
+            if (room.playerData.length >= room.numOfPlayers) {
+              return socket.emit("roomFull", "Room is full!");
+            }
+
             const foundPlayer = room.playerData.some(el => el.id === data.playerId);
             if (!foundPlayer) {
               room.playerData = [...room.playerData, {
@@ -37,6 +41,7 @@ module.exports = function (io) {
               }];
             }
 
+            room.markModified('playerData');
             room.save()
                 .then(updatedRoom => {
                   return socket.emit("joinedRoom", updatedRoom);
@@ -45,7 +50,7 @@ module.exports = function (io) {
           })
           .catch(err => {
             console.error(err);
-            return socket.emit("roomNotFound");
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
           });
     })
 
@@ -53,19 +58,21 @@ module.exports = function (io) {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
             const playerIndex = room.playerData.findIndex(el => el.id === data.playerId);
-            if (playerIndex !== -1) {
-              const player = room.playerData.splice(playerIndex, 1);
-              console.log(player);
-              room.save()
-                  .then(updatedRoom => {
-                    return socket.emit("leftRoom", updatedRoom);
-                  })
-                  .catch(err => console.error(err));
+            if (playerIndex === -1) {
+              return socket.emit("playerNotFound", "Can't find player with given index in the room")
             }
+
+            const player = room.playerData.splice(playerIndex, 1);
+            room.markModified('playerData');
+            room.save()
+                .then(updatedRoom => {
+                  return socket.emit("leftRoom", updatedRoom);
+                })
+                .catch(err => console.error(err));
           })
           .catch(err => {
             console.error(err);
-            return socket.emit("roomNotFound");
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
           });
     })
 
@@ -74,14 +81,14 @@ module.exports = function (io) {
           .then(room => {
             room.isLive = true;
             room.save()
-                .then(() => {
-                  return socket.emit("start");
+                .then(updatedRoom => {
+                  return socket.emit("start", updatedRoom);
                 })
                 .catch(err => console.error(err));
           })
           .catch(err => {
             console.error(err);
-            return socket.emit("roomNotFound");
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
           });
     })
 
@@ -89,14 +96,12 @@ module.exports = function (io) {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
             const playerIndex = room.playerData.findIndex(el => el.id === data.playerId);
-            if (playerIndex !== -1) {
-              room.playerData[playerIndex] = {
-                id: data.playerId,
-                name: data.playerName,
-                score: data.playerScore
-              };
+            if (playerIndex === -1) {
+              return socket.emit("playerNotFound", "Can't find player with given index in the room")
             }
 
+            room.playerData[playerIndex].score = data.playerScore;
+            room.markModified('playerData');
             room.save()
                 .then(updatedRoom => {
                   return socket.emit("updatedPlayerData", updatedRoom);
@@ -105,7 +110,7 @@ module.exports = function (io) {
           })
           .catch(err => {
             console.error(err);
-            return socket.emit("roomNotFound");
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
           });
     })
 
@@ -113,12 +118,12 @@ module.exports = function (io) {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
             leaderboard = room.playerData;
-            leaderboard = sortByKey(leaderboard, "score");
+            leaderboard = sortByKeyDesc(leaderboard, "score");
             return socket.emit("highScore", leaderboard.slice(0, 3));
           })
           .catch(err => {
             console.error(err);
-            return socket.emit("roomNotFound");
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
           });
     })
 
@@ -126,12 +131,12 @@ module.exports = function (io) {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
             leaderboard = room.playerData;
-            leaderboard = sortByKey(leaderboard, "score");
-            return socket.emit("highScore", leaderboard);
+            leaderboard = sortByKeyDesc(leaderboard, "score");
+            return socket.emit("gameResult", leaderboard);
           })
           .catch(err => {
             console.error(err);
-            return socket.emit("roomNotFound");
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
           });
     })
   });

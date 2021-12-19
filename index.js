@@ -3,7 +3,11 @@ const app = express();
 const { createServer } = require('http');
 const httpServer = createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*"
+  }
+});
 
 require("./startup/keySetup")();
 require("./startup/db")();
