@@ -5,9 +5,10 @@ const roomSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
   },
   gameId: {
-    type: Number,
-    min: 6,
-    max: 6,
+    type: String,
+    required: true,
+    minlength: 6,
+    maxlength: 6
   },
   content: [mongoose.Schema.Types.Mixed],
   timePerRound: {
@@ -18,8 +19,12 @@ const roomSchema = mongoose.Schema({
     type: Number,
     min: 1
   },
-  playerIds: {
-    type: [mongoose.Schema.Types.ObjectId]
+  playerData: {
+    type: [mongoose.Schema.Types.Mixed]
+  },
+  isLive: {
+    type: Boolean,
+    default: false
   }
 });
 
