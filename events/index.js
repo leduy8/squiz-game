@@ -114,10 +114,11 @@ module.exports = function (io) {
           });
     })
 
-    socket.on("leaderboard", data => {
+    socket.on("top3", data => {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
             leaderboard = room.playerData;
+            leaderboard = leaderboard.filter(e => e.score !== 0);
             leaderboard = sortByKeyDesc(leaderboard, "score");
             return socket.emit("highScore", leaderboard.slice(0, 3));
           })
@@ -127,7 +128,7 @@ module.exports = function (io) {
           });
     })
 
-    socket.on("result", data => {
+    socket.on("leaderboard", data => {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
             leaderboard = room.playerData;
