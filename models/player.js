@@ -26,7 +26,7 @@ const playerSchema = mongoose.Schema({
     type: String,
     required: true,
     minlength: 6,
-    maxlength: 6
+    maxlength: 128
   }
 });
 
@@ -44,8 +44,15 @@ playerSchema.methods.generateToken = function () {
   return jwt.sign({ _id: this._id }, process.env.SECRET_KEY);
 }
 
+playerSchema.methods.setPin = async function (pin) {
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(pin, salt);
+  this.pin = hash;
+}
+
 playerSchema.methods.checkPin = async function (pin) {
-  return this.pin = pin
+  console.log(pin);
+  return bcrypt.compare(pin, this.pin);
 }
 
 const Player = mongoose.model("Player", playerSchema);

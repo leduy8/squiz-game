@@ -34,6 +34,7 @@ router.post("/", async (req, res) => {
     try {
         player = new Player(_.pick(req.body, ["username", "password", "name", "pin"]));
         await player.setPassword(req.body.password);
+        await player.setPin(req.body.pin);
         player = await player.save();
 
         return res.status(201).send(_.pick(player, ["_id", "username", "name"]));

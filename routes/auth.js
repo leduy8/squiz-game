@@ -2,22 +2,17 @@ const express = require("express");
 const Joi = require('joi');
 const { Player } = require("../models/player");
 const router = express.Router();
-const { verifyToken, isValidObjectId } = require('../utils');
+const { isValidObjectId } = require('../utils');
 
 router.post("/round1", async (req, res) => {
-    const body = verifyToken(req.body.data, ["username", "password"]);
-    if (body === "Invalid secret key") {
-        return res.status(401).send("Invalid secret key.");
-    }
-
-    const { error, value } = validateRound1(body);
+    const { error, value } = validateRound1(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    let player = await Player.findOne({ username: body.username });
+    let player = await Player.findOne({ username: req.body.username });
     if (!player) return res.status(400).send("Invalid username or password.");
 
     try {
-        const isValid = await player.checkPassword(body.password);
+        const isValid = await player.checkPassword(req.body.password);
         if (!isValid) return res.status(400).send("Invalid username or password.");
 
         const token = player.generateToken();
@@ -28,21 +23,16 @@ router.post("/round1", async (req, res) => {
 });
 
 router.post("/round2", async (req, res) => {
-    const body = verifyToken(req.body.data, ["_id", "pin"]);
-    if (body === "Invalid secret key") {
-        return res.status(401).send("Invalid secret key.");
-    }
-
-    const { error, value } = validateRound2(body);
+    const { error, value } = validateRound2(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    if (!isValidObjectId(body._id)) return res.status(400).send("Invalid id.");
+    if (!isValidObjectId(req.body._id)) return res.status(400).send("Invalid id.");
 
-    let player = await Player.findById(body._id);
+    let player = await Player.findById(req.body._id);
     if (!player) return res.status(400).send("Invalid id.");
 
     try {
-        const isValid = player.checkPin(body.pin);
+        const isValid = await player.checkPin(req.body.pin);
         if (!isValid) return res.status(400).send("Invalid pin.");
 
         res.send("Login successfully.");
