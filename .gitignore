@@ -127,3 +127,6 @@ dist
 
 # SvelteKit build / generate output
 .svelte-kit
+
+# Cert for SSL/TLS security
+cert
