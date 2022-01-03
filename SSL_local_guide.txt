@@ -1,5 +1,6 @@
 Step 0: Open bash for linux subsystem (for Windows)
-Step 1: Generate RSA private key of local computer: openssl genrsa -out key.pem
-Step 2: Create a CSR (Certificate signing request) using private key: openssl req -new -key key.pem -out csr.pem
-Step 3: Generate the SSL certification from CSR: openssl x509 -req -days 365 -in csr.pem -signkey key.pem -out cert.pem
-Step 4: Remove csr.pem file (we don't need this)
+Step 1: Create cert folder in root.
+Step 2: Generate RSA private key of local computer: openssl genrsa -out key.pem
+Step 3: Create a CSR (Certificate signing request) using private key: openssl req -new -key key.pem -out csr.pem
+Step 4: Generate the SSL certification from CSR: openssl x509 -req -days 365 -in csr.pem -signkey key.pem -out cert.pem
+Step 5: Remove csr.pem file (we don't need this)
