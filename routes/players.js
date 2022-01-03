@@ -9,7 +9,17 @@ router.get("/", async (req, res) => {
 
     if (!players) return res.status(404).send("No player found.");
 
-    return res.send(players);
+    returnedData = []
+
+    players.map((player) => {
+        returnedData.push({
+            "_id": player._id,
+            "username": player.username,
+            "name": player.name
+        });
+    })
+
+    return res.send(returnedData);
 })
 
 router.get("/:id", async (req, res) => {
@@ -18,7 +28,10 @@ router.get("/:id", async (req, res) => {
             return res.status(400).send("Invalid Id.");
 
         const player = await Player.findById(req.params.id);
+        
         if (!player) return res.status(404).send("Player not found.");
+
+        return res.send(_.pick(player, ["_id", "username", "name"]));
     } catch (e) {
         console.error(e.message);
     }
