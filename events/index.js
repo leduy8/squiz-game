@@ -21,7 +21,7 @@ module.exports = function (io) {
               (err, result) => {
                 if (err) 
                   return console.error(err);
-                return socket.boardcast.emit("joinedRoom", result);
+                return socket.broadcast.emit("joinedRoom", result);
               }
             )
           })
@@ -39,7 +39,7 @@ module.exports = function (io) {
         (err, result) => {
           if (err) 
             return console.error(err);
-          return socket.boardcast.emit("leftRoom", result);
+          return socket.broadcast.emit("leftRoom", result);
         }
       )
     })
@@ -50,7 +50,7 @@ module.exports = function (io) {
             room.isLive = true;
             room.save()
                 .then(updatedRoom => {
-                  return socket.boardcast.emit("start", updatedRoom);
+                  return socket.broadcast.emit("start", updatedRoom);
                 })
                 .catch(err => console.error(err));
           })
