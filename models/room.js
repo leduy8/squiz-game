@@ -11,6 +11,10 @@ const roomSchema = mongoose.Schema({
     minlength: 6,
     maxlength: 6
   },
+  currentQuestionCount: {
+    type: Number,
+    required: true
+  },
   content: [mongoose.Schema.Types.Mixed],
   timePerRound: {
     type: Number,
@@ -36,8 +40,7 @@ function validateRoom(room) {
     content: Joi.required(),
     timePerRound: Joi.number().min(1).required(),
     numOfPlayers: Joi.number().min(1).required(),
-    hostId: Joi.required(),
-    hostName: Joi.required()
+    hostId: Joi.required()
   })
 
   return schema.validate(room);

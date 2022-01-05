@@ -21,6 +21,7 @@ module.exports = function (io) {
               (err, result) => {
                 if (err) 
                   return console.error(err);
+                socket.emit("joinedRoom", result);
                 return socket.broadcast.emit("joinedRoom", result);
               }
             )
@@ -39,6 +40,7 @@ module.exports = function (io) {
         (err, result) => {
           if (err) 
             return console.error(err);
+          socket.emit("leftRoom", result);
           return socket.broadcast.emit("leftRoom", result);
         }
       )
@@ -48,9 +50,11 @@ module.exports = function (io) {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
             room.isLive = true;
+            room.currentQuestionCount = 1;
             room.save()
                 .then(updatedRoom => {
-                  return socket.broadcast.emit("start", updatedRoom);
+                  socket.emit("start", updatedRoom.content[0])
+                  return socket.broadcast.emit("start", updatedRoom.content[0]);
                 })
                 .catch(err => console.error(err));
           })
@@ -59,6 +63,38 @@ module.exports = function (io) {
             return socket.emit("roomNotFound", "Cannot find room with given ID");
           });
     })
+
+    socket.on("nextQuestion", data => {
+      Room.findOneAndUpdate(
+        { gameId: data.gameId },
+        { $inc: { currentQuestionCount: 1 } },
+        (err, result) => {
+          if (err) {
+            console.error(err);
+            return socket.emit("somethingWrong");
+          }
+          if (result.currentQuestionCount == result.content.length - 2) {
+            socket.emit("hostLastQuestion");
+            return socket.broadcast.emit("playerLastQuestion", result.content[result.currentQuestionCount]);
+          }
+
+          socket.emit("hostNextQuestion");
+          return socket.broadcast.emit("playerNextQuestion", result.content[result.currentQuestionCount]);
+        }
+      )
+    });
+
+    socket.on("lastQuestion", data => {
+      Room.findOne({ gameId: data.gameId })
+          .then(room => {
+            socket.emit("hostEndGame");
+            return socket.emit("playerEndGame", room.content[room.currentQuestionCount])
+          })
+          .catch(err => {
+            console.error(err);
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
+          });
+    });
 
     socket.on("submitAnswer", data => {
       Room.findOneAndUpdate(
