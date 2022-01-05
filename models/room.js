@@ -1,3 +1,4 @@
+const Joi = require("joi");
 const mongoose = require("mongoose");
 
 const roomSchema = mongoose.Schema({
@@ -30,4 +31,17 @@ const roomSchema = mongoose.Schema({
 
 const Room = mongoose.model("Room", roomSchema);
 
+function validateRoom(room) {
+  const schema = Joi.object({
+    content: Joi.required(),
+    timePerRound: Joi.number().min(1).required(),
+    numOfPlayers: Joi.number().min(1).required(),
+    hostId: Joi.required(),
+    hostName: Joi.required()
+  })
+
+  return schema.validate(room);
+}
+
 exports.Room = Room;
+exports.validate = validateRoom;
