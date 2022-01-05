@@ -82,15 +82,17 @@ module.exports = function (io) {
           });
     })
 
-    socket.on("timeUp", data => {
+    socket.on("submitAnswer", data => {
       Room.findOneAndUpdate(
         { gameId: data.gameId, "playerData.id": data.playerId }, 
         { $set: { "playerData.$.score": data.playerScore } }, 
         { new: true },
         (err, result) => {
-          if (err) 
-            return console.error(err);
-          return socket.emit("updatedPlayerData", { gameId: data.gameId });
+          if (err) {
+            console.error(err);
+            return socket.emit("somethingWrong");
+          }
+          return socket.emit("submited", { gameId: data.gameId });
         }
       )
     })
