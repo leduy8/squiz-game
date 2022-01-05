@@ -35,7 +35,11 @@ router.post("/round2", async (req, res) => {
         const isValid = await player.checkPin(req.body.pin);
         if (!isValid) return res.status(400).send("Invalid pin.");
 
-        res.send("Login successfully.");
+        res.send({
+            message: "Login successfully.",
+            _id: player._id,
+            name: player.name
+        });
     } catch (e) {
         console.log(e.message);
     }
