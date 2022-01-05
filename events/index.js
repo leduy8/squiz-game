@@ -121,5 +121,17 @@ module.exports = function (io) {
             return socket.emit("roomNotFound", "Cannot find room with given ID");
           });
     })
+
+    // ? utils sockets
+    socket.on("roomInfo", data => {
+      Room.findOne({ gameId: data.gameId })
+            .then(room => {
+              return socket.emit("roomInfoRes", room);
+            })
+            .catch(err => {
+              console.error(err);
+              return socket.emit("roomNotFound", "Cannot find room with given ID");
+            });
+    })
   });
 }
