@@ -55,7 +55,8 @@ module.exports = function (io) {
                     hostId: updatedRoom.hostId,
                     gameId: updatedRoom.gameId,
                     content: updatedRoom.content,
-                    timePerRound: updatedRoom.timePerRound
+                    timePerRound: updatedRoom.timePerRound,
+                    roomId: updatedRoom._id
                   }
 
                   socket.emit("start", result)
