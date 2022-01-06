@@ -57,14 +57,6 @@ module.exports = function (io) {
                     content: updatedRoom.content[0]
                   }
 
-                  if (updatedRoom.content.length == 1) {
-                    socket.emit("hostEndGame", result);
-                    return socket.broadcast.emit("playerEndGame", result);
-                  } else if (updatedRoom.content.length == 2) {
-                    socket.emit("hostLastQuestion", result);
-                    return socket.broadcast.emit("playerLastQuestion", result);
-                  }
-
                   socket.emit("start", result)
                   return socket.broadcast.emit("start", result);
                 })
@@ -77,6 +69,24 @@ module.exports = function (io) {
     })
 
     socket.on("nextQuestion", data => {
+      Room.findOne({ gameId: data.gameId })
+          .then(room => {
+            const result = {
+              ...room,
+              content: room.content[room.currentQuestionCount]
+            }
+
+            if (room.content.length == 2) {
+              socket.emit("hostLastQuestion", result);
+              return socket.broadcast.emit("playerLastQuestion", result);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
+          });
+
+      console.log("asdasdasdasd")
       Room.findOneAndUpdate(
         { gameId: data.gameId },
         { $inc: { currentQuestionCount: 1 } },
@@ -105,9 +115,10 @@ module.exports = function (io) {
     socket.on("lastQuestion", data => {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
+            console.log(room.content[room.content.length - 1]);
             const result = {
               ...room,
-              content: room.content[room.currentQuestionCount]
+              content: room.content[room.content.length - 1]
             }
 
             socket.emit("hostEndGame", result);
