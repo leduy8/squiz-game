@@ -96,5 +96,17 @@ module.exports = function (io) {
         }
       )
     })
+
+    socket.on("endGame", data => {
+      Room.findOne({ gameId: data.gameId })
+          .then(room => {
+            socket.emit("gameEnd");
+            return socket.broadcast.emit("gameEnd");
+          })
+          .catch(err => {
+            console.error(err);
+            return socket.emit("roomNotFound", "Cannot find room with given ID");
+          })
+    })
   });
 }
