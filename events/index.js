@@ -49,12 +49,11 @@ module.exports = function (io) {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
             room.isLive = true;
-            room.currentQuestionCount = 1;
             room.save()
                 .then(updatedRoom => {
                   const result = {
-                    ...updatedRoom,
-                    content: updatedRoom.content[0]
+                    hostId: updatedRoom.hostId,
+                    content: updatedRoom.content
                   }
 
                   socket.emit("start", result)
@@ -71,58 +70,8 @@ module.exports = function (io) {
     socket.on("nextQuestion", data => {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
-            const result = {
-              ...room,
-              content: room.content[room.currentQuestionCount]
-            }
-
-            if (room.content.length == 2) {
-              socket.emit("hostLastQuestion", result);
-              return socket.broadcast.emit("playerLastQuestion", result);
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            return socket.emit("roomNotFound", "Cannot find room with given ID");
-          });
-
-      console.log("asdasdasdasd")
-      Room.findOneAndUpdate(
-        { gameId: data.gameId },
-        { $inc: { currentQuestionCount: 1 } },
-        (err, result) => {
-          if (err) {
-            console.error(err);
-            return socket.emit("somethingWrong");
-          }
-
-          const returned = {
-            ...result,
-            content: result.content[result.currentQuestionCount]
-          }
-
-          if (result.currentQuestionCount == result.content.length - 2) {
-            socket.emit("hostLastQuestion", returned);
-            return socket.broadcast.emit("playerLastQuestion", returned);
-          }
-
-          socket.emit("hostNextQuestion", returned);
-          return socket.broadcast.emit("playerNextQuestion", returned);
-        }
-      )
-    });
-
-    socket.on("lastQuestion", data => {
-      Room.findOne({ gameId: data.gameId })
-          .then(room => {
-            console.log(room.content[room.content.length - 1]);
-            const result = {
-              ...room,
-              content: room.content[room.content.length - 1]
-            }
-
-            socket.emit("hostEndGame", result);
-            return socket.broadcast.emit("playerEndGame", result)
+            socket.emit("toNextQuestion");
+            return socket.broadcast.emit("toNextQuestion");
           })
           .catch(err => {
             console.error(err);
