@@ -53,6 +53,7 @@ module.exports = function (io) {
                 .then(updatedRoom => {
                   const result = {
                     hostId: updatedRoom.hostId,
+                    gameId: updatedRoom.gameId,
                     content: updatedRoom.content
                   }
 
