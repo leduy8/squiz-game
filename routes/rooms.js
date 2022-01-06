@@ -51,7 +51,7 @@ router.get("/:id/top3", async (req, res) => {
     if (!room) return res.status(404).send("No room with given game ID found.");
 
     leaderboard = room.playerData;
-    leaderboard = leaderboard.filter(e => e.score !== 0);
+    // leaderboard = leaderboard.filter(e => e.score !== 0);
     leaderboard = sortByKeyDesc(leaderboard, "score");
 
     return res.send(leaderboard.slice(0, 3));
@@ -63,7 +63,7 @@ router.get("/:id/leaderboard", async (req, res) => {
     if (!room) return res.status(404).send("No room with given game ID found.");
 
     leaderboard = room.playerData;
-    leaderboard = leaderboard.filter(e => e.score !== 0);
+    // leaderboard = leaderboard.filter(e => e.score !== 0);
     leaderboard = sortByKeyDesc(leaderboard, "score");
 
     return res.send(leaderboard);
