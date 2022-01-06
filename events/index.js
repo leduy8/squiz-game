@@ -1,5 +1,4 @@
 const { Room } = require('../models/room');
-const { randomGameId, sortByKeyDesc } = require("../utils");
 
 module.exports = function (io) {
   io.on("connection", socket => {
@@ -53,8 +52,21 @@ module.exports = function (io) {
             room.currentQuestionCount = 1;
             room.save()
                 .then(updatedRoom => {
-                  socket.emit("start", updatedRoom.content[0])
-                  return socket.broadcast.emit("start", updatedRoom.content[0]);
+                  const result = {
+                    ...updatedRoom,
+                    content: updatedRoom.content[0]
+                  }
+
+                  if (updatedRoom.content.length == 1) {
+                    socket.emit("hostEndGame", result);
+                    return socket.broadcast.emit("playerEndGame", result);
+                  } else if (updatedRoom.content.length == 2) {
+                    socket.emit("hostLastQuestion", result);
+                    return socket.broadcast.emit("playerLastQuestion", result);
+                  }
+
+                  socket.emit("start", result)
+                  return socket.broadcast.emit("start", result);
                 })
                 .catch(err => console.error(err));
           })
@@ -73,13 +85,19 @@ module.exports = function (io) {
             console.error(err);
             return socket.emit("somethingWrong");
           }
-          if (result.currentQuestionCount == result.content.length - 2) {
-            socket.emit("hostLastQuestion");
-            return socket.broadcast.emit("playerLastQuestion", result.content[result.currentQuestionCount]);
+
+          const returned = {
+            ...result,
+            content: result.content[result.currentQuestionCount]
           }
 
-          socket.emit("hostNextQuestion");
-          return socket.broadcast.emit("playerNextQuestion", result.content[result.currentQuestionCount]);
+          if (result.currentQuestionCount == result.content.length - 2) {
+            socket.emit("hostLastQuestion", returned);
+            return socket.broadcast.emit("playerLastQuestion", returned);
+          }
+
+          socket.emit("hostNextQuestion", returned);
+          return socket.broadcast.emit("playerNextQuestion", returned);
         }
       )
     });
@@ -87,8 +105,13 @@ module.exports = function (io) {
     socket.on("lastQuestion", data => {
       Room.findOne({ gameId: data.gameId })
           .then(room => {
-            socket.emit("hostEndGame");
-            return socket.emit("playerEndGame", room.content[room.currentQuestionCount])
+            const result = {
+              ...room,
+              content: room.content[room.currentQuestionCount]
+            }
+
+            socket.emit("hostEndGame", result);
+            return socket.broadcast.emit("playerEndGame", result)
           })
           .catch(err => {
             console.error(err);

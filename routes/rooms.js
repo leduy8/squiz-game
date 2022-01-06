@@ -34,7 +34,8 @@ router.post("/", async (req, res) => {
             timePerRound: req.body.timePerRound,
             numOfPlayers: req.body.numOfPlayers,
             playerData: [],
-            currentQuestionCount: 0
+            currentQuestionCount: 0,
+            isLive: false
         });
         room = await room.save();
 
