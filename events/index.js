@@ -54,7 +54,8 @@ module.exports = function (io) {
                   const result = {
                     hostId: updatedRoom.hostId,
                     gameId: updatedRoom.gameId,
-                    content: updatedRoom.content
+                    content: updatedRoom.content,
+                    timePerRound: updatedRoom.timePerRound
                   }
 
                   socket.emit("start", result)
