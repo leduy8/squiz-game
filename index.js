@@ -1,11 +1,15 @@
 const fs = require('fs');
 const path = require('path');
+const selfsigned = require('selfsigned');
+var attrs = [{ name: 'commonName', value: 'contoso.com' }];
+var pems = selfsigned.generate(attrs, { days: 365 });
 const express = require("express");
 const app = express();
 const { createServer } = require('https');
 const httpsServer = createServer({
-  key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, "cert", "cert.pem"))
+  key: pems.private,
+  cert: pems.cert,
+  rejectUnauthorized: false
 }, app);
 const { Server } = require("socket.io");
 const io = new Server(httpsServer, {
